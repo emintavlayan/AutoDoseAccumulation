@@ -1,6 +1,7 @@
 ﻿namespace VMS.TPS
 
-open Functions
+open PlanFunctions
+open Utilities
 open FsToolkit.ErrorHandling
 open VMS.TPS.Common.Model.API
 
