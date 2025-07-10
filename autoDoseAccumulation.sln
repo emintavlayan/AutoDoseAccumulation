@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.12.35527.113 d17.12
+VisualStudioVersion = 17.12.35527.113
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "autoDoseAccumulation", "autoDoseAccumulation.fsproj", "{0C935379-72E4-4AC5-916C-9F6BD0A212C8}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "AutoDoseAccumulation", "AutoDoseAccumulation.fsproj", "{0C935379-72E4-4AC5-916C-9F6BD0A212C8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
