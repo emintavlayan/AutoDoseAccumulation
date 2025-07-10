@@ -65,7 +65,7 @@ module Functions =
             Ok copiedPlan
 
     type VmatBeamParameters =
-        { ExternalBeamMachioneParameters: ExternalBeamMachineParameters
+        { ExternalBeamMachineParameters: ExternalBeamMachineParameters
           MetersetWeights: float list
           CollimatorAngle: float
           GantryAngle: float
@@ -91,15 +91,16 @@ module Functions =
 
     let getVmatBeamParameters (beam: Beam) : VmatBeamParameters =
         // first control point
-        let cp = beam.ControlPoints |> Seq.head
+        let firstControlPoint = beam.ControlPoints |> Seq.head
+        let lastControlPoint = beam.ControlPoints |> Seq.last
 
-        { ExternalBeamMachioneParameters = getExternalBeamMachineParameters beam
+        { ExternalBeamMachineParameters = getExternalBeamMachineParameters beam
           MetersetWeights = beam.ControlPoints |> Seq.map (fun cp -> cp.MetersetWeight) |> Seq.toList
-          CollimatorAngle = cp.CollimatorAngle
-          GantryAngle = cp.GantryAngle
-          GantryStop = beam.ControlPoints |> Seq.last |> (fun cp -> cp.GantryAngle)
+          CollimatorAngle = firstControlPoint.CollimatorAngle
+          GantryAngle = firstControlPoint.GantryAngle
+          GantryStop = lastControlPoint.GantryAngle
           GantryDirection = beam.GantryDirection
-          PatientSupportAngle = cp.PatientSupportAngle
+          PatientSupportAngle = firstControlPoint.PatientSupportAngle
           IsocenterPosition = beam.IsocenterPosition }
 
     let getVmatBeamParametersFromPlan (plan: ExternalPlanSetup) : VmatBeamParameters list =
@@ -110,7 +111,7 @@ module Functions =
         |> List.iter (fun p ->
             let beam =
                 plan.AddVMATBeam(
-                    p.ExternalBeamMachioneParameters,
+                    p.ExternalBeamMachineParameters,
                     p.MetersetWeights,
                     p.CollimatorAngle,
                     p.GantryAngle,
