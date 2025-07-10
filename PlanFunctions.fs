@@ -38,6 +38,7 @@ module PlanFunctions =
             copiedPlan.Id <- currentPlan.Id + "C"
             Ok copiedPlan
 
+    // Vmat Beam Parameters Type for safety when creating beams
     type VmatBeamParameters =
         { ExternalBeamMachineParameters: ExternalBeamMachineParameters
           MetersetWeights: float list
