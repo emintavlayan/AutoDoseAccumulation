@@ -15,10 +15,10 @@ do ()
 type Script() =
     member __.Execute(context: ScriptContext) =
 
-        context.Patient.BeginModifications()
-
         result {
             let! patient = getCurrentPatient context
+
+            patient.BeginModifications()
 
             let! course = getCurrentCourse context
 
