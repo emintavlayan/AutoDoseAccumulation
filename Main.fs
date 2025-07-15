@@ -1,4 +1,4 @@
-﻿namespace VMS.TPS
+namespace VMS.TPS
 
 open PlanFunctions
 open Utilities
@@ -7,13 +7,13 @@ open VMS.TPS.Common.Model.API
 
 
 // Assembly attribute to indicate the script can write data
-[<assembly: ESAPIScript(IsWriteable = true)>]
+[<assembly : ESAPIScript(IsWriteable = true)>]
 do ()
 
 /// This type of Running the code is imposed by Varian Esapi library.
 [<System.Runtime.CompilerServices.CompilerGeneratedAttribute>]
 type Script() =
-    member __.Execute(context: ScriptContext) =
+    member __.Execute(context : ScriptContext) =
 
         context.Patient.BeginModifications()
 
@@ -22,18 +22,16 @@ type Script() =
 
             let! course = getCurrentCourse context
 
-            let! currentPlan = tryGetMatchingExternalPlan course
+            let! originalPlan = tryGetMatchingExternalPlan course "HH"
 
-            let modifiedPlan = modifyPlan currentPlan
+            let! newImagePlans = tryGetMatchingExternalPlans course "aCT"
 
-            let! copiedPlan = copyPlanToNewStructureSet course patient modifiedPlan
+            let! copiedPlans =
+                newImagePlans
+                |> List.map (fun plan -> copyPlanToNewImage course originalPlan plan)
+                |> List.map (fun plan -> plan.CalculateDose() |> ignore)
 
-            copiedPlan.CalculateDose() |> ignore
             //copiedplan.CalculateDoseWithPresetValues() //if you need tio set MU values
 
             return "Plan copied and dose calculated successfully."
         }
-
-        |> function
-            | Ok msg -> showMessage msg
-            | Error err -> showMessage err

@@ -13,5 +13,5 @@ fsharp_newline_before_multiline_computation_expression = false
 fsharp_space_before_colon = true
 indent_size = 4
 indent_style = space
-max_line_length = 120
+max_line_length = 100
 trim_trailing_whitespace = true

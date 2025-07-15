@@ -1,4 +1,4 @@
-﻿namespace VMS.TPS
+namespace VMS.TPS
 
 open System
 open System.Windows.Forms
@@ -9,91 +9,44 @@ open VMS.TPS.Common.Model.Types
 module PlanFunctions =
 
     // Modify an external plan by setting prescription and calculation model
-    let modifyPlan (plan: ExternalPlanSetup) =
-        let doseValue = DoseValue(2.0, "Gy")
+    let setPrescription (plan : ExternalPlanSetup) (dose : float) =
+        let doseValue =
+            DoseValue(dose, "Gy")
+
         plan.SetPrescription(1, doseValue, 1)
-        plan.SetCalculationModel(CalculationType.PhotonVolumeDose, "accAcurosXB")
         plan
 
-    // Copy the modified plan to a new structure set
-    let copyPlanToNewStructureSet (course: Course) (patient: Patient) (currentPlan: ExternalPlanSetup) =
+    // Modify an external plan by setting prescription and calculation model
+    let setCalculationModel (plan : ExternalPlanSetup) (calculationModel : string) =
+        plan.SetCalculationModel(CalculationType.PhotonVolumeDose, calculationModel) // "accAcurosXB"
+        plan
+
+    // Copy the modified plan to a new image / structure set
+    let copyPlanToNewImage
+        (course : Course)
+        (originalPlan : ExternalPlanSetup)
+        (newImagePlan : ExternalPlanSetup)
+        =
 
         // maybe we have to decide where to get structureset
-        let structureSetOpt = patient.StructureSets |> Seq.tryHead
+        let newImage =
+            newImagePlan.StructureSet.Image
 
-        match structureSetOpt with
-        | None -> Error "No StructureSet found."
-        | Some ss ->
-            let newStructureSet = ss.Image.CreateNewStructureSet()
+        let newStructureSet =
+            newImage.CreateNewStructureSet()
 
-            let searchBodyParameters = ss.GetDefaultSearchBodyParameters()
-            newStructureSet.CreateAndSearchBody(searchBodyParameters) |> ignore
+        let searchBodyParameters =
+            newStructureSet.GetDefaultSearchBodyParameters()
 
-            let outputDiagnostics =
-                System.Text.StringBuilder("Type in the information about copied plan.")
+        newStructureSet.CreateAndSearchBody(searchBodyParameters)
+        |> ignore
 
-            let copiedPlan =
-                course.CopyPlanSetup(currentPlan, newStructureSet, outputDiagnostics) :?> ExternalPlanSetup
+        let outputDiagnostics =
+            System.Text.StringBuilder("Type in the information about copied plan.")
 
-            copiedPlan.Id <- currentPlan.Id + "C"
-            Ok copiedPlan
+        let copiedPlan =
+            course.CopyPlanSetup(originalPlan, newStructureSet, outputDiagnostics)
+            :?> ExternalPlanSetup
 
-    // Vmat Beam Parameters Type for safety when creating beams
-    type VmatBeamParameters =
-        { ExternalBeamMachineParameters: ExternalBeamMachineParameters
-          MetersetWeights: float list
-          CollimatorAngle: float
-          GantryAngle: float
-          GantryStop: float
-          GantryDirection: GantryDirection
-          PatientSupportAngle: float
-          IsocenterPosition: VVector }
-
-    // Copy the modified plan to a new structure set
-    let getExternalBeamMachineParameters (beam: Beam) : ExternalBeamMachineParameters =
-
-        let machineId = beam.TreatmentUnit.Id
-        let energyModeId = beam.EnergyMode.Id
-        let doseRate: int = beam.DoseRate
-        let techniqueId = beam.Technique.Id
-        let primaryFluenceModeId = beam.BeamTechnique.ToString()
-        let mlcId = beam.MLC
-
-        let parameters =
-            new ExternalBeamMachineParameters(machineId, energyModeId, doseRate, techniqueId, primaryFluenceModeId)
-
-        parameters
-
-    let getVmatBeamParameters (beam: Beam) : VmatBeamParameters =
-        // first control point
-        let firstControlPoint = beam.ControlPoints |> Seq.head
-        let lastControlPoint = beam.ControlPoints |> Seq.last
-
-        { ExternalBeamMachineParameters = getExternalBeamMachineParameters beam
-          MetersetWeights = beam.ControlPoints |> Seq.map (fun cp -> cp.MetersetWeight) |> Seq.toList
-          CollimatorAngle = firstControlPoint.CollimatorAngle
-          GantryAngle = firstControlPoint.GantryAngle
-          GantryStop = lastControlPoint.GantryAngle
-          GantryDirection = beam.GantryDirection
-          PatientSupportAngle = firstControlPoint.PatientSupportAngle
-          IsocenterPosition = beam.IsocenterPosition }
-
-    let getVmatBeamParametersFromPlan (plan: ExternalPlanSetup) : VmatBeamParameters list =
-        plan.Beams |> Seq.map getVmatBeamParameters |> Seq.toList
-
-    let addVmatBeams (parameters: VmatBeamParameters list) (plan: ExternalPlanSetup) =
-        parameters
-        |> List.iter (fun p ->
-            let beam =
-                plan.AddVMATBeam(
-                    p.ExternalBeamMachineParameters,
-                    p.MetersetWeights,
-                    p.CollimatorAngle,
-                    p.GantryAngle,
-                    p.GantryStop,
-                    p.GantryDirection,
-                    p.PatientSupportAngle,
-                    p.IsocenterPosition
-                )
-
-            beam |> ignore)
+        copiedPlan.Id <- newImagePlan.Id + "C"
+        Ok copiedPlan

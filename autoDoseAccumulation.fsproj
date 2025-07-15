@@ -16,6 +16,8 @@
     <Compile Include="Main.fs" />
   </ItemGroup>
 
+  <ItemGroup />
+
   <ItemGroup>
     <PackageReference Include="FsToolkit.ErrorHandling" Version="5.0.0" />
   </ItemGroup>
