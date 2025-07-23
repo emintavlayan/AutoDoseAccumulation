@@ -11,9 +11,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Utilities.fs" />
-    <Compile Include="PlanFunctions.fs" />
-    <Compile Include="Main.fs" />
+    <Compile Include="01_Utilities.fs" />
+    <Compile Include="02_PlanFunctions.fs" />
+    <Compile Include="03_Workflow.fs" />
+    <Compile Include="04_Main.fs" />
   </ItemGroup>
 
   <ItemGroup />
