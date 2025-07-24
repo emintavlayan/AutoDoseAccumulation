@@ -13,8 +13,9 @@
   <ItemGroup>
     <Compile Include="01_Utilities.fs" />
     <Compile Include="02_PlanFunctions.fs" />
-    <Compile Include="03_Workflow.fs" />
-    <Compile Include="04_Main.fs" />
+    <Compile Include="03_PlanModifiers.fs" />
+    <Compile Include="04_Workflow.fs" />
+    <Compile Include="05_Main.fs" />
   </ItemGroup>
 
   <ItemGroup />

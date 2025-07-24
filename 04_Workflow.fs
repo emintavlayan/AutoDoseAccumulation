@@ -1,49 +1,44 @@
 module VMS.TPS.Workflow
 
 open PlanFunctions
+open PlanModifiers
 open FsToolkit.ErrorHandling
 open VMS.TPS.Common.Model.API
 
 /// Creates a modified plan from a given original plan and a new image plan
 let createModifiedPlanFromDailyImage
     (course : Course)
-    (originalPlan : PlanSetup)
+    (originalPlan : ExternalPlanSetup)
     (newImagePlan : PlanSetup)
     (imagingDeviceId : string)
     (suffix : string)
+    (prescriptionDose : float)
+    (calculationModel : string)
     : Result<ExternalPlanSetup, string>
     =
 
     result {
         let! copiedPlan =
-            PlanFunctions.copyPlanToNewImage course originalPlan newImagePlan imagingDeviceId suffix
+            copyPlanToNewImageSafe
+                course
+                originalPlan
+                newImagePlan
+                imagingDeviceId
+                suffix
 
-        let! modifiedPlan =
-            copiedPlan
-            |> trySetPrescription 2.0
-            |> Result.bind (trySetCalculationModel "AcurosXB_18.0.1")
-
-        let modifiedExternalPlan =
-            modifiedPlan :?> ExternalPlanSetup
+        let! preparedPlan =
+            preparePlan copiedPlan prescriptionDose calculationModel
 
         // First dose calculation after setting prescription and model
-        try
-            modifiedExternalPlan.CalculateDose()
-            |> ignore
-        with ex ->
-            return! Error $"Dose calculation failed (pre-weight): {ex.Message}"
+        do! calculateDoseSafe "pre-weight" preparedPlan
 
         // Adjust beam weights using original plan MU values
-        do! adjustBeamWeightsofPlans (originalPlan, modifiedPlan)
+        do! adjustBeamWeightsofPlans (originalPlan, preparedPlan)
 
         // Second dose calculation after modifying beam weights
-        try
-            modifiedExternalPlan.CalculateDose()
-            |> ignore
-        with ex ->
-            return! Error $"Dose calculation failed (post-weight): {ex.Message}"
+        do! calculateDoseSafe "post-weight" preparedPlan
 
-        return modifiedExternalPlan
+        return preparedPlan
     }
 
 /// Creates modified plans from a list of image plans, returns success and error messages
@@ -53,6 +48,8 @@ let createModifiedPlansFromDailyImages
     (dailyImagePlans : ExternalPlanSetup list)
     (imagingDeviceId : string)
     (suffix : string)
+    (prescriptionDose : float)
+    (calculationModel : string)
     : string list * string list
     =
 
@@ -61,7 +58,14 @@ let createModifiedPlansFromDailyImages
     // - On failure, prepend a labeled error message to the error list
     let folder (successes, errors) imagePlan =
         match
-            createModifiedPlanFromDailyImage course originalPlan imagePlan imagingDeviceId suffix
+            createModifiedPlanFromDailyImage
+                course
+                originalPlan
+                imagePlan
+                imagingDeviceId
+                suffix
+                prescriptionDose
+                calculationModel
         with
         | Ok plan ->
             let msg =

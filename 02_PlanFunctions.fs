@@ -5,7 +5,7 @@ open VMS.TPS.Common.Model.Types
 open FsToolkit.ErrorHandling
 
 /// Attempts to set prescription, returns Result
-let trySetPrescription (dose : float) (plan : PlanSetup) =
+let setPrescriptionSafe (dose : float) (plan : PlanSetup) =
     let doseValue =
         DoseValue(dose, "Gy")
 
@@ -16,7 +16,7 @@ let trySetPrescription (dose : float) (plan : PlanSetup) =
         Error $"Failed to set prescription: {ex.Message}"
 
 /// Attempts to set calculation model, returns Result
-let trySetCalculationModel (model : string) (plan : PlanSetup) =
+let setCalculationModelSafe (model : string) (plan : PlanSetup) =
     try
         plan.SetCalculationModel(CalculationType.PhotonVolumeDose, model)
         Ok(plan)
@@ -24,7 +24,7 @@ let trySetCalculationModel (model : string) (plan : PlanSetup) =
         Error $"Failed to set calculation model: {ex.Message}"
 
 /// Copies a plan onto the image of another plan
-let copyPlanToNewImage
+let copyPlanToNewImageSafe
     (course : Course)
     (originalPlan : PlanSetup)
     (newImagePlan : PlanSetup)
@@ -39,12 +39,12 @@ let copyPlanToNewImage
         System.Text.StringBuilder("Diagnostics: ")
 
     try
-        newImage.Series.SetImagingDevice(imagingDeviceId) // ---------------------- set the imaging device id
+        newImage.Series.SetImagingDevice(imagingDeviceId) // set the imaging device id
 
         let copiedPlan =
             course.CopyPlanSetup(originalPlan, newImage, outputDiagnostics)
 
-        copiedPlan.Id <- newImagePlan.Id + suffix // ------------------------------ renaming logic
+        copiedPlan.Id <- newImagePlan.Id + suffix // renaming logic
         Ok copiedPlan
 
     with ex ->
@@ -91,7 +91,7 @@ let adjustWeightsOfBeamPair (sourceBeam : Beam, targetBeam : Beam) : Result<unit
 
 /// Adjusts beam weight factors for two matching plans by pairing beams by ID
 let adjustBeamWeightsofPlans
-    (sourcePlan : PlanSetup, targetPlan : PlanSetup)
+    (sourcePlan : ExternalPlanSetup, targetPlan : ExternalPlanSetup)
     : Result<unit, string>
     =
     result {

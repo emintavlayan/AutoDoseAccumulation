@@ -13,6 +13,7 @@ do ()
 [<System.Runtime.CompilerServices.CompilerGeneratedAttribute>]
 type Script() =
     member __.Execute(context : ScriptContext) =
+
         let result = result {
             // Gets the currently loaded patient and begins modifications
             let! patient = Utilities.tryGetCurrentPatient context
@@ -27,26 +28,16 @@ type Script() =
             // Gets all daily image plans containing 'aCT' in their IDs
             let! allImagePlans = Utilities.tryFindMatchingPlans course "aCT"
 
-            // String to set the Imaging Device
-            let imagingDeviceId =
-                "Default_CT_Scanner"
-
-            // Suffix to add to modified plan ids
-            let suffix =
-                "C"
-
-            // --- SINGLE PLAN VERSION ---
-            // let! plan = createModifiedPlan course originalPlan (List.head allImagePlans)
-            // return [ $"[SINGLE] Plan '{plan.Id}' created successfully." ]
-
             // --- MULTI PLAN VERSION ---
             let successMsgs, errorMsgs =
                 createModifiedPlansFromDailyImages
                     course
                     originalPlan
                     allImagePlans
-                    imagingDeviceId
-                    suffix
+                    "Default_CT_Scanner" // imagingDeviceId
+                    "C" // suffix to add to modified plan ids
+                    2.0 // prescriptionDose
+                    "AcurosXB_18.0.1" // calculationModel
 
             return successMsgs @ errorMsgs
         }
