@@ -72,50 +72,96 @@ let checkBeamIdOrderAndEquality
         Error "Beam IDs do not match in order."
 
 /// Adjusts a copied beam's weight factor to match the original MU ratio
-let adjustWeightsOfBeamPair (sourceBeam : Beam, targetBeam : Beam) : Result<unit, string> =
-    let origMU =
-        sourceBeam.Meterset.Value
+let adjustWeightsOfBeamPair
+    (referenceBeam : Beam, targetBeam : Beam)
+    : Result<unit, string>
+    =
+    let referenceMU =
+        referenceBeam.Meterset.Value
 
-    let copiedMU =
+    let targetMU =
         targetBeam.Meterset.Value
+
+    let newWeightFactor =
+        referenceMU / targetMU
+
+    let referenceBeamParameters =
+        referenceBeam.GetEditableParameters()
 
     let targetBeamParameters =
         targetBeam.GetEditableParameters()
 
+    let referenceWF =
+        referenceBeamParameters.WeightFactor
+
+    let targetBeamWF =
+        targetBeamParameters.WeightFactor
+
     try
-        targetBeamParameters.WeightFactor <- origMU / copiedMU
+        // Show message before applying the new weight factor ----------- DEBUG ------------
+        VMS.TPS.Utilities.showMessageBox (
+            $"target beam id: '{targetBeam.Id}':\n"
+            + $"target beam wf: '{targetBeamWF |> string}':\n"
+            + $"Reference MU: {referenceMU:F2}\n"
+            + $"Target MU: {targetMU:F2}\n"
+            + $"New Weight Factor from ref beam: {referenceWF:F4}"
+        )
+
+        // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        // this showed already correct beam weight and mus
+        // edge case maybe different MUs and also different WFs
+        // in that case we calculate newFactor ( ref / target MUs )
+        // and then set the new target WF = WF * factor
+        // to be the safest option
+        // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        // or maybe chaking normalisations of the plans
+        // if they match ( no norm or targte beam )
+        // and act properly
+        // like normalising the target plan to match exactly the ref
+        // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        targetBeamParameters.WeightFactor <- referenceWF
         targetBeam.ApplyParameters(targetBeamParameters)
+
+        // Show message after applying the new weight factor ------------ DEBUG --------------
+        VMS.TPS.Utilities.showMessageBox (
+            $"Target id: {targetBeam}\n"
+            + $"Target MU before: {targetMU:F2}\n"
+            + $"Target MU after: {targetBeam.Meterset.Value:F2}\n"
+        )
+
         Ok()
     with ex ->
         Error $"Failed to adjust beam weight of {targetBeam.Id}: {ex.Message}"
 
 /// Adjusts beam weight factors for two matching plans by pairing beams by ID
 let adjustBeamWeightsofPlans
-    (sourcePlan : ExternalPlanSetup, targetPlan : ExternalPlanSetup)
+    (referencePlan : ExternalPlanSetup, targetPlan : ExternalPlanSetup)
     : Result<unit, string>
     =
-    result {
-        let sourceBeams =
-            sourcePlan.Beams
-            |> Seq.filter (fun b -> not b.IsSetupField)
-            |> Seq.sortBy (fun b -> b.Id)
-            |> Seq.toArray
+    let referenceBeams =
+        referencePlan.Beams
+        |> Seq.filter (fun b -> not b.IsSetupField)
+        |> Seq.sortBy (fun b -> b.Id)
+        |> Seq.toArray
 
-        let targetBeams =
-            targetPlan.Beams
-            |> Seq.filter (fun b -> not b.IsSetupField)
-            |> Seq.sortBy (fun b -> b.Id)
-            |> Seq.toArray
+    let targetBeams =
+        targetPlan.Beams
+        |> Seq.filter (fun b -> not b.IsSetupField)
+        |> Seq.sortBy (fun b -> b.Id)
+        |> Seq.toArray
+
+    result {
 
         do!
             if
-                sourceBeams.Length
+                referenceBeams.Length
                 <> targetBeams.Length
             then
                 Error "Source and target plans have different number of beams"
             else
                 Ok()
 
-        for i in 0 .. sourceBeams.Length - 1 do
-            do! adjustWeightsOfBeamPair (sourceBeams[i], targetBeams[i])
+        for i in 0 .. referenceBeams.Length - 1 do
+            do! adjustWeightsOfBeamPair (referenceBeams[i], targetBeams[i])
     }

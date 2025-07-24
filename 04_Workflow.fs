@@ -8,7 +8,7 @@ open VMS.TPS.Common.Model.API
 /// Creates a modified plan from a given original plan and a new image plan
 let createModifiedPlanFromDailyImage
     (course : Course)
-    (originalPlan : ExternalPlanSetup)
+    (referencePlan : ExternalPlanSetup)
     (newImagePlan : PlanSetup)
     (imagingDeviceId : string)
     (suffix : string)
@@ -21,7 +21,7 @@ let createModifiedPlanFromDailyImage
         let! copiedPlan =
             copyPlanToNewImageSafe
                 course
-                originalPlan
+                referencePlan
                 newImagePlan
                 imagingDeviceId
                 suffix
@@ -33,7 +33,7 @@ let createModifiedPlanFromDailyImage
         do! calculateDoseSafe "pre-weight" preparedPlan
 
         // Adjust beam weights using original plan MU values
-        do! adjustBeamWeightsofPlans (originalPlan, preparedPlan)
+        do! adjustBeamWeightsofPlans (referencePlan, preparedPlan)
 
         // Second dose calculation after modifying beam weights
         do! calculateDoseSafe "post-weight" preparedPlan
@@ -44,8 +44,8 @@ let createModifiedPlanFromDailyImage
 /// Creates modified plans from a list of image plans, returns success and error messages
 let createModifiedPlansFromDailyImages
     (course : Course)
-    (originalPlan : ExternalPlanSetup)
-    (dailyImagePlans : ExternalPlanSetup list)
+    (referencePlan : ExternalPlanSetup)
+    (allImagePlans : ExternalPlanSetup list)
     (imagingDeviceId : string)
     (suffix : string)
     (prescriptionDose : float)
@@ -60,7 +60,7 @@ let createModifiedPlansFromDailyImages
         match
             createModifiedPlanFromDailyImage
                 course
-                originalPlan
+                referencePlan
                 imagePlan
                 imagingDeviceId
                 suffix
@@ -80,5 +80,5 @@ let createModifiedPlansFromDailyImages
 
     // Fold over all image plans, accumulating successes and errors
     // Then reverse both lists to restore original processing order
-    List.fold folder ([], []) dailyImagePlans
+    List.fold folder ([], []) allImagePlans
     |> fun (s, e) -> List.rev s, List.rev e

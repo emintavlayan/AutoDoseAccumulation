@@ -9,7 +9,9 @@
 
     <AssemblyName>$(MSBuildProjectName).esapi</AssemblyName> 
 
-    <IncrementVersionOnBuild>1.yyyy.Mdd.Hmm</IncrementVersionOnBuild>
+    <IncrementVersionOnBuild>1.yyyy.Mdd.Hmm</IncrementVersionOnBuild> 
+
+    <Version>1.2025.724.1530</Version>
   </PropertyGroup>
 
   <ItemGroup>

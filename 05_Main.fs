@@ -6,8 +6,6 @@ open FsToolkit.ErrorHandling
 open System.Reflection
 
 [<assembly : ESAPIScript(IsWriteable = true)>]
-[<assembly : AssemblyVersion("1.0.1.2")>]
-[<assembly : AssemblyFileVersion("1.0.1.2")>]
 do ()
 
 [<System.Runtime.CompilerServices.CompilerGeneratedAttribute>]
@@ -23,7 +21,7 @@ type Script() =
             let! course = Utilities.tryGetCurrentCourse context
 
             // Gets the original plan containing 'HH' in its ID
-            let! originalPlan = Utilities.tryFindPlanByIdPattern course "HH"
+            let! referencePlan = Utilities.tryFindPlanByIdPattern course "HH"
 
             // Gets all daily image plans containing 'aCT' in their IDs
             let! allImagePlans = Utilities.tryFindMatchingPlans course "aCT"
@@ -32,9 +30,9 @@ type Script() =
             let successMsgs, errorMsgs =
                 createModifiedPlansFromDailyImages
                     course
-                    originalPlan
+                    referencePlan
                     allImagePlans
-                    "Default_CT_Scanner" // imagingDeviceId
+                    "Def_CTScanner" // imagingDeviceId
                     "C" // suffix to add to modified plan ids
                     2.0 // prescriptionDose
                     "AcurosXB_18.0.1" // calculationModel

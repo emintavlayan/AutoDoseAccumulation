@@ -15,8 +15,8 @@ let preparePlan
 
         let! prepared =
             plan
-            |> setPrescriptionSafe 2.0
-            |> Result.bind (setCalculationModelSafe "AcurosXB_18.0.1")
+            |> setPrescriptionSafe prescriptionDose
+            |> Result.bind (setCalculationModelSafe calculationModel)
 
         return prepared :?> ExternalPlanSetup
     }
@@ -25,6 +25,17 @@ let preparePlan
 let calculateDoseSafe (stage : string) (plan : ExternalPlanSetup) =
     try
         plan.CalculateDose() |> ignore
+
+        let mu =
+            plan.Beams
+            |> Seq.head
+            |> fun b -> b.Meterset.Value
+            |> string
+
+        VMS.TPS.Utilities.showMessageBox (
+            $"Plan {plan.Id} first beam MU : {mu:F2}"
+        )
+
         Ok()
     with ex ->
         Error $"Dose calculation failed ({stage}): {ex.Message}"
