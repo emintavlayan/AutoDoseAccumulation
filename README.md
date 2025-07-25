@@ -1,5 +1,3 @@
-### Auto Dose Accumulation ###
-Esapi code with beautiful FSharp
 # Auto Dose Accumulation
 
 This project demonstrates how to automate basic plan copying and dose accumulation
