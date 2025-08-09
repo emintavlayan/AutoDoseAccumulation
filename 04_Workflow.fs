@@ -1,3 +1,4 @@
+/// High-level workflow for generating modified plans from daily images.
 module VMS.TPS.Workflow
 
 open PlanFunctions
@@ -5,7 +6,9 @@ open PlanModifiers
 open FsToolkit.ErrorHandling
 open VMS.TPS.Common.Model.API
 
-/// Creates a modified plan from a given original plan and a new image plan
+/// Copies the reference plan to a new image, prepares it,
+/// recalculates dose, adjusts beam weights, recalculates again,
+/// and returns the final plan.
 let createModifiedPlanFromDailyImage
     (course : Course)
     (referencePlan : ExternalPlanSetup)
@@ -41,7 +44,7 @@ let createModifiedPlanFromDailyImage
         return preparedPlan
     }
 
-/// Creates modified plans from a list of image plans, returns success and error messages
+/// Processes multiple image plans, returning lists of success and error messages.
 let createModifiedPlansFromDailyImages
     (course : Course)
     (referencePlan : ExternalPlanSetup)

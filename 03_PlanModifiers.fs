@@ -1,10 +1,11 @@
+/// Composite operations that prepare a plan and perform dose calculations.
 module VMS.TPS.PlanModifiers
 
 open VMS.TPS.Common.Model.API
 open FsToolkit.ErrorHandling
 open PlanFunctions
 
-/// Copies a plan to a new image and applies prescription and calculation model
+/// Applies prescription and calculation model, returning the plan as ExternalPlanSetup
 let preparePlan
     (plan : PlanSetup)
     (prescriptionDose : float)
@@ -21,7 +22,8 @@ let preparePlan
         return prepared :?> ExternalPlanSetup
     }
 
-/// Calculates dose for a plan and returns an error message if it fails
+/// Performs dose calculation and reports the MU of the first beam;
+/// wraps failures in a Result
 let calculateDoseSafe (stage : string) (plan : ExternalPlanSetup) =
     try
         plan.CalculateDose() |> ignore

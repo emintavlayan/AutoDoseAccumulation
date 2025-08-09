@@ -1,3 +1,5 @@
+/// Low-level plan manipulation helpers:
+/// setting prescription/model, copying plans, and beam weight utilities.
 module VMS.TPS.PlanFunctions
 
 open VMS.TPS.Common.Model.API

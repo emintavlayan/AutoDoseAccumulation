@@ -1,3 +1,5 @@
+// Entry point for the ESAPI script. Retrieves context objects, creates modified
+// plans from daily images, and shows a summary of successes or errors.
 namespace VMS.TPS
 
 open VMS.TPS.Common.Model.API
